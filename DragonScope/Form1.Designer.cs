@@ -10,71 +10,81 @@
 
         private void InitializeComponent()
         {
-            this.btnOpenCsv = new System.Windows.Forms.Button();
-            this.btnOpenXml = new System.Windows.Forms.Button();
-            this.lblCsvFile = new System.Windows.Forms.Label();
-            this.lblXmlFile = new System.Windows.Forms.Label();
-            this.textBoxOutput = new System.Windows.Forms.TextBox();
-            this.SuspendLayout();
+            btnOpenCsv = new Button();
+            btnOpenXml = new Button();
+            lblCsvFile = new Label();
+            lblXmlFile = new Label();
+            textBoxOutput = new TextBox();
+            progressBar1 = new ProgressBar();
+            SuspendLayout();
             // 
             // btnOpenCsv
             // 
-            this.btnOpenCsv.Location = new System.Drawing.Point(12, 12);
-            this.btnOpenCsv.Name = "btnOpenCsv";
-            this.btnOpenCsv.Size = new System.Drawing.Size(75, 23);
-            this.btnOpenCsv.TabIndex = 0;
-            this.btnOpenCsv.Text = "Open CSV";
-            this.btnOpenCsv.UseVisualStyleBackColor = true;
-            this.btnOpenCsv.Click += new System.EventHandler(this.btnOpenCsv_Click);
+            btnOpenCsv.Location = new Point(12, 12);
+            btnOpenCsv.Name = "btnOpenCsv";
+            btnOpenCsv.Size = new Size(75, 23);
+            btnOpenCsv.TabIndex = 0;
+            btnOpenCsv.Text = "Open CSV";
+            btnOpenCsv.UseVisualStyleBackColor = true;
+            btnOpenCsv.Click += btnOpenCsv_Click;
             // 
             // btnOpenXml
             // 
-            this.btnOpenXml.Location = new System.Drawing.Point(12, 41);
-            this.btnOpenXml.Name = "btnOpenXml";
-            this.btnOpenXml.Size = new System.Drawing.Size(75, 23);
-            this.btnOpenXml.TabIndex = 1;
-            this.btnOpenXml.Text = "Open XML";
-            this.btnOpenXml.UseVisualStyleBackColor = true;
-            this.btnOpenXml.Click += new System.EventHandler(this.btnOpenXml_Click);
+            btnOpenXml.Location = new Point(12, 41);
+            btnOpenXml.Name = "btnOpenXml";
+            btnOpenXml.Size = new Size(75, 23);
+            btnOpenXml.TabIndex = 1;
+            btnOpenXml.Text = "Open XML";
+            btnOpenXml.UseVisualStyleBackColor = true;
+            btnOpenXml.Click += btnOpenXml_Click;
             // 
             // lblCsvFile
             // 
-            this.lblCsvFile.AutoSize = true;
-            this.lblCsvFile.Location = new System.Drawing.Point(93, 17);
-            this.lblCsvFile.Name = "lblCsvFile";
-            this.lblCsvFile.Size = new System.Drawing.Size(0, 15);
-            this.lblCsvFile.TabIndex = 2;
+            lblCsvFile.AutoSize = true;
+            lblCsvFile.Location = new Point(93, 17);
+            lblCsvFile.Name = "lblCsvFile";
+            lblCsvFile.Size = new Size(0, 15);
+            lblCsvFile.TabIndex = 2;
             // 
             // lblXmlFile
             // 
-            this.lblXmlFile.AutoSize = true;
-            this.lblXmlFile.Location = new System.Drawing.Point(93, 46);
-            this.lblXmlFile.Name = "lblXmlFile";
-            this.lblXmlFile.Size = new System.Drawing.Size(0, 15);
-            this.lblXmlFile.TabIndex = 3;
+            lblXmlFile.AutoSize = true;
+            lblXmlFile.Location = new Point(93, 46);
+            lblXmlFile.Name = "lblXmlFile";
+            lblXmlFile.Size = new Size(0, 15);
+            lblXmlFile.TabIndex = 3;
             // 
             // textBoxOutput
             // 
-            this.textBoxOutput.Location = new System.Drawing.Point(12, 70);
-            this.textBoxOutput.Multiline = true;
-            this.textBoxOutput.Name = "textBoxOutput";
-            this.textBoxOutput.Size = new System.Drawing.Size(776, 368);
-            this.textBoxOutput.TabIndex = 4;
+            textBoxOutput.Location = new Point(12, 70);
+            textBoxOutput.Multiline = true;
+            textBoxOutput.Name = "textBoxOutput";
+            textBoxOutput.Size = new Size(776, 368);
+            textBoxOutput.TabIndex = 4;
+            // 
+            // progressBar1
+            // 
+            progressBar1.Location = new Point(341, 23);
+            progressBar1.Name = "progressBar1";
+            progressBar1.Size = new Size(177, 23);
+            progressBar1.TabIndex = 5;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.textBoxOutput);
-            this.Controls.Add(this.lblXmlFile);
-            this.Controls.Add(this.lblCsvFile);
-            this.Controls.Add(this.btnOpenXml);
-            this.Controls.Add(this.btnOpenCsv);
-            this.Name = "Form1";
-            this.Text = "Form1";
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(800, 450);
+            Controls.Add(progressBar1);
+            Controls.Add(textBoxOutput);
+            Controls.Add(lblXmlFile);
+            Controls.Add(lblCsvFile);
+            Controls.Add(btnOpenXml);
+            Controls.Add(btnOpenCsv);
+            Name = "Form1";
+            Text = "Form1";
+            ResumeLayout(false);
+            PerformLayout();
         }
+        private ProgressBar progressBar1;
     }
 }
