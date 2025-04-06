@@ -64,7 +64,7 @@
             // 
             // progressBar1
             // 
-            progressBar1.Location = new Point(341, 23);
+            progressBar1.Location = new Point(611, 46);
             progressBar1.Name = "progressBar1";
             progressBar1.Size = new Size(177, 23);
             progressBar1.TabIndex = 5;

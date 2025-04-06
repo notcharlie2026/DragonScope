@@ -40,24 +40,23 @@ namespace DragonScope
 
         private void ParseCsvFile(string filePath)
         {
+            var errors = new HashSet<string>();
             var lines = File.ReadAllLines(filePath);
             for (int it = 0; it < lines.Length; it++)
             {
                 string line = lines[it];
                 var values = line.Split(',');
-                for (int i = 0; i < values.Length; i++)
+                if (values.Length > 2 && values[1].Contains("Fault_") && values[2] == "1")
                 {
-                    if (i == 1) // Assuming the second column is the one to check
+                    if (errors.Add(values[1])) // Add returns false if the item already exists
                     {
-                        if (values[i].Contains("Fault_"))
-                        {
-                            WriteToTextBox(values[i] + " has value: ");
-                        }
+                        WriteToTextBox(values[1] + " has value: " + values[2]);
                     }
                 }
                 progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
             }
         }
+
 
         private void ParseXmlFile(string filePath)
         {
