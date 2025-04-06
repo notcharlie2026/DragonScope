@@ -56,9 +56,11 @@
             // 
             // textBoxOutput
             // 
+            textBoxOutput.Cursor = Cursors.IBeam;
             textBoxOutput.Location = new Point(12, 70);
             textBoxOutput.Multiline = true;
             textBoxOutput.Name = "textBoxOutput";
+            textBoxOutput.ScrollBars = ScrollBars.Both;
             textBoxOutput.Size = new Size(776, 368);
             textBoxOutput.TabIndex = 4;
             // 

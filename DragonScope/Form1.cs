@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Linq;
 
@@ -7,6 +9,7 @@ namespace DragonScope
 {
     public partial class Form1 : Form
     {
+        private Dictionary<string, (string Type, string Range)> xmlData;
         public Form1()
         {
             InitializeComponent();
@@ -42,11 +45,15 @@ namespace DragonScope
         {
             var errors = new HashSet<string>();
             var lines = File.ReadAllLines(filePath);
+            string[] names = xmlData.Keys.ToArray();
+            string[] types = xmlData.Values.Select(v => v.Type).ToArray();
+            string[] ranges = xmlData.Values.Select(v => v.Range).ToArray();
             for (int it = 0; it < lines.Length; it++)
             {
                 string line = lines[it];
                 var values = line.Split(',');
-                if (values.Length > 2 && values[1].Contains("Fault_") && values[2] == "1")
+                
+                if (values.Length == 3 && names.Any(name => values[1].Contains(name)) && values[2] == "1")
                 {
                     if (errors.Add(values[1])) // Add returns false if the item already exists
                     {
@@ -60,11 +67,18 @@ namespace DragonScope
 
         private void ParseXmlFile(string filePath)
         {
-            // Implement XML parsing logic here
+            xmlData = new Dictionary<string, (string Type, string Range)>();
             var xmlDoc = XDocument.Load(filePath);
-            foreach (var element in xmlDoc.Descendants())
+            foreach (var element in xmlDoc.Descendants("Value"))
             {
-                // Process XML elements
+                var name = element.Attribute("Name")?.Value;
+                var type = element.Attribute("Type")?.Value;
+                var range = element.Attribute("Range")?.Value;
+
+                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type))
+                {
+                    xmlData[name] = (type, range);
+                }
             }
         }
 
