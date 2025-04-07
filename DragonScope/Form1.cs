@@ -77,9 +77,17 @@ namespace DragonScope
                         }
                     }
                 }
+                else if (values.Length > 2 && values[1].Contains("Fault_") && values[2] == "1")
+                {
+                    if (errors.Add(values[1]))
+                    {
+                        WriteToTextBox(values[1] + " has value: " + values[2]);
+                    }
+                }
 
-                progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
+                    progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
             }
+            progressBar1.Value = 100; // Ensure progress bar is full at the end
         }
 
         private void ParseXmlFile(string filePath)
