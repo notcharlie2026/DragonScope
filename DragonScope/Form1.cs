@@ -19,8 +19,8 @@ namespace DragonScope
                 openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    lblCsvFile.Text = openFileDialog.FileName;
                     ParseCsvFile(openFileDialog.FileName);
+                    lblCsvFile.Text = openFileDialog.FileName;
                 }
             }
         }
@@ -32,22 +32,31 @@ namespace DragonScope
                 openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    lblXmlFile.Text = openFileDialog.FileName;
                     ParseXmlFile(openFileDialog.FileName);
+                    lblXmlFile.Text = openFileDialog.FileName;
                 }
             }
         }
 
         private void ParseCsvFile(string filePath)
         {
-            // Implement CSV parsing logic here
+            var errors = new HashSet<string>();
             var lines = File.ReadAllLines(filePath);
-            foreach (var line in lines)
+            for (int it = 0; it < lines.Length; it++)
             {
+                string line = lines[it];
                 var values = line.Split(',');
-                // Process CSV values
+                if (values.Length > 2 && values[1].Contains("Fault_") && values[2] == "1")
+                {
+                    if (errors.Add(values[1])) // Add returns false if the item already exists
+                    {
+                        WriteToTextBox(values[1] + " has value: " + values[2]);
+                    }
+                }
+                progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
             }
         }
+
 
         private void ParseXmlFile(string filePath)
         {
@@ -61,7 +70,7 @@ namespace DragonScope
 
         private void WriteToTextBox(string text)
         {
-            textBoxOutput.Text = text;
+            textBoxOutput.AppendText(text + $"{Environment.NewLine}");
         }
     }
 }
