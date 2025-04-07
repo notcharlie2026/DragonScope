@@ -18,6 +18,7 @@ namespace DragonScope
 
         private void btnOpenCsv_Click(object sender, EventArgs e)
         {
+            textBoxOutput.Text = "";
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
@@ -63,16 +64,16 @@ namespace DragonScope
                             WriteToTextBox(values[1] + " has value: " + values[2]);
                         }
                     }
-                    else if (type == "range" && int.TryParse(values[2], out int intValue))
+                    else if (type == "range" && float.TryParse(values[2], out float intValue))
                     {
-                        if (int.TryParse(rangeLow, out int low) && int.TryParse(rangeHigh, out int high))
+                        if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
                         {
-                            if (intValue >= low && intValue <= high)
+                            if (intValue <= low || intValue >= high)
                             {
-                                if (errors.Add(values[1]))
-                                {
-                                    WriteToTextBox(values[1] + " has value: " + values[2]);
-                                }
+                                //if (errors.Add(values[1]))
+                                //{
+                                    WriteToTextBox(values[1] + " has value: " + values[2]+ " at time: " + values[0]);
+                                //}
                             }
                         }
                     }
@@ -81,7 +82,7 @@ namespace DragonScope
                 {
                     if (errors.Add(values[1]))
                     {
-                        WriteToTextBox(values[1] + " has value: " + values[2]);
+                        WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + values[0]);
                     }
                 }
 
@@ -98,8 +99,8 @@ namespace DragonScope
             {
                 var name = element.Attribute("Name")?.Value;
                 var type = element.Attribute("Type")?.Value;
-                var rangeHigh = element.Attribute("RangeHigh")?.Value;
-                var rangeLow = element.Attribute("RangeLow")?.Value;
+                var rangeHigh = element.Attribute("Rangehigh")?.Value;
+                var rangeLow = element.Attribute("Rangelow")?.Value;
 
                 if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type))
                 {
