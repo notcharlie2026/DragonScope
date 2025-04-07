@@ -1,5 +1,4 @@
     <Values>
         <Value Name="/RoboRio/InputVoltage" Type="range" Rangehigh="12.8" Rangelow="10"/>
-        <!-- More values -->
     </Values>
     

@@ -47,7 +47,7 @@ namespace DragonScope
         {
             var errors = new HashSet<string>();
             var lines = File.ReadAllLines(filePath);
-
+            float robotenable = 0;
             for (int it = 0; it < lines.Length; it++)
             {
                 string line = lines[it];
@@ -61,7 +61,10 @@ namespace DragonScope
                     {
                         if (errors.Add(values[1]))
                         {
-                            WriteToTextBox(values[1] + " has value: " + values[2]);
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                            }
                         }
                     }
                     else if (type == "range" && float.TryParse(values[2], out float intValue))
@@ -70,25 +73,50 @@ namespace DragonScope
                         {
                             if (intValue <= low || intValue >= high)
                             {
-                                //if (errors.Add(values[1]))
-                                //{
-                                    WriteToTextBox(values[1] + " has value: " + values[2]+ " at time: " + values[0]);
-                                //}
+                                if (float.TryParse(values[0], out float timeValue))
+                                {
+                                    WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                                }
                             }
                         }
                     }
-                }
-                else if (values.Length > 2 && values[1].Contains("Fault_") && values[2] == "1")
-                {
-                    if (errors.Add(values[1]))
+                    else if (values.Length > 2 && values[1].Contains("/Fault_") && values[2] == "1")
                     {
-                        WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + values[0]);
+                        if (errors.Add(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                            }
+                        }
                     }
-                }
+                    else if (values.Length > 2 && values[1].Contains("/StickyFault_") && values[2] == "1")
+                    {
+                        if (errors.Add(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                            }
+                        }
+                    }
+                    else if (values.Length > 2 && values[1].Contains("/RobotEnable"))
+                    {
+                        if (values[2] == "true")
+                        {
+                            if (float.TryParse(values[0], out float parsedValue))
+                            {
+                                robotenable = parsedValue;
+                            }
+                        }
+                    }
 
-                    progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
+                        progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
+                    
+                    
+                }
+                 progressBar1.Value = 100; // Ensure progress bar is full at the end
             }
-            progressBar1.Value = 100; // Ensure progress bar is full at the end
         }
 
         private void ParseXmlFile(string filePath)
@@ -109,9 +137,26 @@ namespace DragonScope
             }
         }
 
-        private void WriteToTextBox(string text)
+        private void WriteToTextBox(string text, int priority)
         {
+            switch (priority)
+            {
+                case 1:
+                    textBoxOutput.ForeColor = System.Drawing.Color.Red;
+                    break;
+                case 2:
+                    textBoxOutput.ForeColor = System.Drawing.Color.Orange;
+                    break;
+                case 3:
+                    textBoxOutput.ForeColor = System.Drawing.Color.Yellow;
+                    break;
+                default:
+                    textBoxOutput.ForeColor = System.Drawing.Color.Black;
+                    break;
+            }
+
             textBoxOutput.AppendText(text + $"{Environment.NewLine}");
+            textBoxOutput.ForeColor = System.Drawing.Color.Black; // Reset color to default
         }
     }
 }
