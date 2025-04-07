@@ -1,0 +1,8 @@
+    <Values>
+        <Value Name="Fault_" Type="bool" Rangehigh="1" Rangelow="0"/>
+        <Value Name="Fault_2" Type="range" Range="0-100"/>
+        <Value Name="/RoboRio/InputVoltage" Type="range" Rangehigh="12.8" Rangelow="11.5"/>
+
+        <!-- More values -->
+    </Values>
+    

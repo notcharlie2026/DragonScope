@@ -9,7 +9,7 @@ namespace DragonScope
 {
     public partial class Form1 : Form
     {
-        private Dictionary<string, (string Type, string Range)> xmlData;
+        private Dictionary<string, (string Type, string Rangehigh, string Rangelow)> xmlData;
         public Form1()
         {
             InitializeComponent();
@@ -47,7 +47,9 @@ namespace DragonScope
             var lines = File.ReadAllLines(filePath);
             string[] names = xmlData.Keys.ToArray();
             string[] types = xmlData.Values.Select(v => v.Type).ToArray();
-            string[] ranges = xmlData.Values.Select(v => v.Range).ToArray();
+            string[] rangehigh = xmlData.Values.Select(v => v.Rangehigh).ToArray();
+            string[] rangelow = xmlData.Values.Select(v => v.Rangelow).ToArray();
+
             for (int it = 0; it < lines.Length; it++)
             {
                 string line = lines[it];
@@ -67,17 +69,19 @@ namespace DragonScope
 
         private void ParseXmlFile(string filePath)
         {
-            xmlData = new Dictionary<string, (string Type, string Range)>();
+            xmlData = new Dictionary<string, (string Type, string Rangehigh, string Rangelow )>();
             var xmlDoc = XDocument.Load(filePath);
             foreach (var element in xmlDoc.Descendants("Value"))
             {
                 var name = element.Attribute("Name")?.Value;
                 var type = element.Attribute("Type")?.Value;
-                var range = element.Attribute("Range")?.Value;
+                var rangehigh = element.Attribute("Rangehigh")?.Value;
+                var rangelow = element.Attribute("Rangelow")?.Value;
+
 
                 if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type))
                 {
-                    xmlData[name] = (type, range);
+                    xmlData[name] = (type, rangehigh, rangelow);
                 }
             }
         }
