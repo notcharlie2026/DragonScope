@@ -72,7 +72,7 @@ namespace DragonScope
                             {
                                 if (float.TryParse(values[0], out float timeValue))
                                 {
-                                    WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                                    WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
                                 }
                             }
                         }
@@ -87,7 +87,7 @@ namespace DragonScope
                                         {
                                             if (float.TryParse(values[0], out float timeValue))
                                             {
-                                            WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                                            WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
                                             }
                                         }
                                     }
@@ -100,7 +100,7 @@ namespace DragonScope
                         {
                             if (float.TryParse(values[0], out float timeValue))
                             {
-                                WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                                WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
                             }
                         }
                     }
@@ -110,7 +110,7 @@ namespace DragonScope
                         {
                             if (float.TryParse(values[0], out float timeValue))
                             {
-                                WriteToTextBox(values[1] + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 2);
+                                WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
                             }
                         }
                     }
