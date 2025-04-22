@@ -141,7 +141,7 @@ namespace DragonScope
         {
             xmlData = new Dictionary<string, (string Type, string RangeHigh, string RangeLow, string priority)>();
             var xmlDoc = XDocument.Load(filePath);
-            foreach (var element in xmlDoc.Descendants("Value"))
+            foreach (var element in xmlDoc.Descendants("Config"))
             {
                 var name = element.Attribute("Name")?.Value;
                 var type = element.Attribute("Type")?.Value;
@@ -176,6 +176,58 @@ namespace DragonScope
 
             textBoxOutput.AppendText(text + $"{Environment.NewLine}");
             textBoxOutput.SelectionColor = System.Drawing.Color.Black; // Reset color to default
+        }
+        private void ConvertWpilogToCsv(string wpilogPath, string csvPath)
+        {
+            var lines = File.ReadAllLines(wpilogPath);
+            using (var writer = new StreamWriter(csvPath))
+            {
+                // Write CSV header
+                writer.WriteLine("Timestamp,Key,Value");
+
+                foreach (var line in lines)
+                {
+                    // Assuming wpilog is in a key-value format with timestamps
+                    var parts = line.Split(' '); // Adjust delimiter based on wpilog format
+                    if (parts.Length >= 3)
+                    {
+                        string timestamp = parts[0];
+                        string key = parts[1];
+                        string value = string.Join(" ", parts.Skip(2));
+                        writer.WriteLine($"{timestamp},{key},{value}");
+                    }
+                }
+            }
+        }
+
+        private void ConvertHootLogToWpilog(string hootLogPath, string wpilogPath)
+        {
+            // Assuming Owlet is a command-line tool
+            string owletExecutable = @"path\to\owlet.exe"; // Update with the actual path to Owlet
+            string arguments = $"convert \"{hootLogPath}\" \"{wpilogPath}\"";
+
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = owletExecutable,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
+            {
+                throw new Exception($"Owlet conversion failed: {error}");
+            }
         }
     }
 }
