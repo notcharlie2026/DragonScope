@@ -56,6 +56,9 @@ namespace DragonScope
             var lines = File.ReadAllLines(filePath);
             float robotenable = 0;
             bool robotenablelatch = false;
+            bool namefoundxml = false;
+            string xmlnamestring = "";
+            string[] xmlnames = xmlData.Keys.ToArray();
 
             for (int it = 0; it < lines.Length; it++)
             {
@@ -64,9 +67,18 @@ namespace DragonScope
 
                 if (values.Length > 2)
                 {
-                    if (xmlData.Keys.Any(k => k.Contains(values[1].Trim())))
+                    foreach(var name in xmlnames)
                     {
-                        var (type, rangeHigh, rangeLow, priority) = xmlData[values[1]];
+                        if (values[1].Contains(name))
+                        {
+                            namefoundxml = true;
+                            xmlnamestring = name;
+                            break;
+                        }
+                    }
+                    if (namefoundxml)
+                    {
+                        var (type, rangeHigh, rangeLow, priority) = xmlData[xmlnamestring];
 
                         if (type == "bool" && values[2] == "1")
                         {
@@ -120,53 +132,56 @@ namespace DragonScope
                                 }
                             }
                         }
+                        //reset the xml name found flag
+                        namefoundxml = false;
+                        xmlnamestring = "";
                     }
-                    //else if (values[1].Contains("/StickyFault_") && values[2] == "1")
-                    //{
-                    //    if (!activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            activeConditions[values[1]] = timeValue - robotenable; // Start time
-                    //        }
-                    //    }
-                    //}
-                    //else if (values[1].Contains("/StickyFault_") && values[2] == "0")
-                    //{
-                    //    if (activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            float startTime = activeConditions[values[1]];
-                    //            float endTime = timeValue - robotenable;
-                    //            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
-                    //            activeConditions.Remove(values[1]);
-                    //        }
-                    //    }
-                    //}
-                    //else if (values[1].Contains("/Fault_") && values[2] == "1")
-                    //{
-                    //    if (!activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            activeConditions[values[1]] = timeValue - robotenable; // Start time
-                    //        }
-                    //    }
-                    //}
-                    //else if (values[1].Contains("/Fault_") && values[2] == "0")
-                    //{
-                    //    if (activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            float startTime = activeConditions[values[1]];
-                    //            float endTime = timeValue - robotenable;
-                    //            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
-                    //            activeConditions.Remove(values[1]);
-                    //        }
-                    //    }
-                    //}
+                    else if (values[1].Contains("/StickyFault_") && values[2] == "1")
+                    {
+                        if (!activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                activeConditions[values[1]] = timeValue - robotenable; // Start time
+                            }
+                        }
+                    }
+                    else if (values[1].Contains("/StickyFault_") && values[2] == "0")
+                    {
+                        if (activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                float startTime = activeConditions[values[1]];
+                                float endTime = timeValue - robotenable;
+                                WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
+                                activeConditions.Remove(values[1]);
+                            }
+                        }
+                    }
+                    else if (values[1].Contains("/Fault_") && values[2] == "1")
+                    {
+                        if (!activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                activeConditions[values[1]] = timeValue - robotenable; // Start time
+                            }
+                        }
+                    }
+                    else if (values[1].Contains("/Fault_") && values[2] == "0")
+                    {
+                        if (activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                float startTime = activeConditions[values[1]];
+                                float endTime = timeValue - robotenable;
+                                WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
+                                activeConditions.Remove(values[1]);
+                            }
+                        }
+                    }
                     else if (values[1].Contains("RobotEnable"))
                     {
                         if (values[2] == "true")
