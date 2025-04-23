@@ -42,7 +42,7 @@
             // lblCsvFile
             // 
             lblCsvFile.AutoSize = true;
-            lblCsvFile.Location = new Point(106, 23);
+            lblCsvFile.Location = new Point(106, 61);
             lblCsvFile.Name = "lblCsvFile";
             lblCsvFile.Size = new Size(0, 20);
             lblCsvFile.TabIndex = 2;
@@ -50,7 +50,7 @@
             // lblXmlFile
             // 
             lblXmlFile.AutoSize = true;
-            lblXmlFile.Location = new Point(106, 61);
+            lblXmlFile.Location = new Point(106, 23);
             lblXmlFile.Name = "lblXmlFile";
             lblXmlFile.Size = new Size(0, 20);
             lblXmlFile.TabIndex = 3;

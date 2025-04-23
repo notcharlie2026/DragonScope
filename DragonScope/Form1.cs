@@ -9,13 +9,12 @@ namespace DragonScope
 {
     public partial class Form1 : Form
     {
-        private Dictionary<string, (string Type, string RangeHigh, string RangeLow, string priority)> xmlData;
-        private bool xmlinit = false;
-
         public Form1()
         {
             InitializeComponent();
         }
+        private Dictionary<string, (string Type, string RangeHigh, string RangeLow, string priority)> xmlData;
+        private bool xmlinit = false;
 
         private void btnOpenCsv_Click(object sender, EventArgs e)
         {
@@ -60,6 +59,7 @@ namespace DragonScope
             string xmlnamestring = "";
             string[] xmlnames = xmlData.Keys.ToArray();
             int linesparsed = 0;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             for (int it = 0; it < lines.Length; it++)
             {
@@ -212,7 +212,8 @@ namespace DragonScope
             }
 
             progressBar1.Value = 100; // Ensure progress bar is full at the end
-            WriteToTextBox( linesparsed+1.ToString()+" entries parsed", 0);
+            stopwatch.Stop();
+            WriteToTextBox( linesparsed+1.ToString()+" entries parsed in" + stopwatch.Elapsed.TotalSeconds.ToString() + " seconds", 0);
         }
         private void ParseXmlFile(string filePath)
         {
