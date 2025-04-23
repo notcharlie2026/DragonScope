@@ -19,22 +19,22 @@
             // 
             // btnOpenCsv
             // 
-            btnOpenCsv.Location = new Point(14, 16);
+            btnOpenCsv.Location = new Point(12, 50);
             btnOpenCsv.Margin = new Padding(3, 4, 3, 4);
             btnOpenCsv.Name = "btnOpenCsv";
             btnOpenCsv.Size = new Size(86, 31);
-            btnOpenCsv.TabIndex = 0;
+            btnOpenCsv.TabIndex = 1;
             btnOpenCsv.Text = "Open CSV";
             btnOpenCsv.UseVisualStyleBackColor = true;
             btnOpenCsv.Click += btnOpenCsv_Click;
             // 
             // btnOpenXml
             // 
-            btnOpenXml.Location = new Point(14, 55);
+            btnOpenXml.Location = new Point(12, 11);
             btnOpenXml.Margin = new Padding(3, 4, 3, 4);
             btnOpenXml.Name = "btnOpenXml";
             btnOpenXml.Size = new Size(86, 31);
-            btnOpenXml.TabIndex = 1;
+            btnOpenXml.TabIndex = 0;
             btnOpenXml.Text = "Open XML";
             btnOpenXml.UseVisualStyleBackColor = true;
             btnOpenXml.Click += btnOpenXml_Click;

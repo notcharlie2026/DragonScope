@@ -52,65 +52,118 @@ namespace DragonScope
 
         private void ParseCsvFile(string filePath)
         {
-            var errors = new HashSet<string>();
+            var activeConditions = new Dictionary<string, float>(); // Tracks active faults or out-of-bounds conditions
             var lines = File.ReadAllLines(filePath);
             float robotenable = 0;
             bool robotenablelatch = false;
+
             for (int it = 0; it < lines.Length; it++)
             {
                 string line = lines[it];
                 var values = line.Split(',');
+
                 if (values.Length > 2)
                 {
-                    if (xmlData.Keys.Any(k => k == values[1])) //TODO fix this to accept values that contain string in xml
+                    if (xmlData.Keys.Any(k => k == values[1]))
                     {
                         var (type, rangeHigh, rangeLow, priority) = xmlData[values[1]];
 
                         if (type == "bool" && values[2] == "1")
                         {
-                            if (errors.Add(values[1]))
+                            if (!activeConditions.ContainsKey(values[1]))
                             {
                                 if (float.TryParse(values[0], out float timeValue))
                                 {
-                                    WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                                    activeConditions[values[1]] = timeValue - robotenable; // Start time
+                                }
+                            }
+                        }
+                        else if (type == "bool" && values[2] == "0")
+                        {
+                            if (activeConditions.ContainsKey(values[1]))
+                            {
+                                if (float.TryParse(values[0], out float timeValue))
+                                {
+                                    float startTime = activeConditions[values[1]];
+                                    float endTime = timeValue - robotenable;
+                                    WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
+                                    activeConditions.Remove(values[1]);
                                 }
                             }
                         }
                         else if (type == "range" && float.TryParse(values[2], out float intValue))
                         {
-
                             if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
                             {
-                                    if (intValue <= low || intValue >= high)
+                                if (intValue <= low || intValue >= high)
+                                {
+                                    if (!activeConditions.ContainsKey(values[1]))
                                     {
-                                        if (errors.Add(values[1]))
+                                        if (float.TryParse(values[0], out float timeValue))
                                         {
-                                            if (float.TryParse(values[0], out float timeValue))
-                                            {
-                                            WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
-                                            }
+                                            activeConditions[values[1]] = timeValue - robotenable; // Start time
                                         }
                                     }
-                            }
-                        }
-                    }
-                    else if (values[1].Contains("/Fault_") && values[2] == "1")
-                    {
-                        if (errors.Add(values[1]))
-                        {
-                            if (float.TryParse(values[0], out float timeValue))
-                            {
-                                WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 1);
+                                }
+                                else
+                                {
+                                    if (activeConditions.ContainsKey(values[1]))
+                                    {
+                                        if (float.TryParse(values[0], out float timeValue))
+                                        {
+                                            float startTime = activeConditions[values[1]];
+                                            float endTime = timeValue - robotenable;
+                                            WriteToTextBox($"\"{values[1]}\" was out of bounds from {startTime} to {endTime}", 1);
+                                            activeConditions.Remove(values[1]);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                     else if (values[1].Contains("/StickyFault_") && values[2] == "1")
                     {
-                        if (errors.Add(values[1]))
+                        if (!activeConditions.ContainsKey(values[1]))
                         {
                             if (float.TryParse(values[0], out float timeValue))
                             {
-                                WriteToTextBox("\"" + values[1] + "\"" + " has value: " + values[2] + " at time: " + (timeValue - robotenable), 2);
+                                activeConditions[values[1]] = timeValue - robotenable; // Start time
+                            }
+                        }
+                    }
+                    else if (values[1].Contains("/StickyFault_") && values[2] == "0")
+                    {
+                        if (activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                float startTime = activeConditions[values[1]];
+                                float endTime = timeValue - robotenable;
+                                WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
+                                activeConditions.Remove(values[1]);
+                            }
+                        }
+                    }
+                    else if (values[1].Contains("/Fault_") && values[2] == "1")
+                    {
+                        if (!activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                activeConditions[values[1]] = timeValue - robotenable; // Start time
+                            }
+                        }
+                    }
+                    else if (values[1].Contains("/Fault_") && values[2] == "0")
+                    {
+                        if (activeConditions.ContainsKey(values[1]))
+                        {
+                            if (float.TryParse(values[0], out float timeValue))
+                            {
+                                float startTime = activeConditions[values[1]];
+                                float endTime = timeValue - robotenable;
+                                WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
+                                activeConditions.Remove(values[1]);
                             }
                         }
                     }
@@ -120,7 +173,7 @@ namespace DragonScope
                         {
                             if (float.TryParse(values[0], out float parsedValue))
                             {
-                                if (robotenablelatch == false)
+                                if (!robotenablelatch)
                                 {
                                     robotenable = parsedValue;
                                     robotenablelatch = true;
@@ -130,13 +183,17 @@ namespace DragonScope
                     }
 
                     progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
-
                 }
-                
             }
+
+            // Handle any remaining active conditions at the end of the file
+            foreach (var condition in activeConditions)
+            {
+                WriteToTextBox($"\"{condition.Key}\" started at {condition.Value} and did not end.", 2);
+            }
+
             progressBar1.Value = 100; // Ensure progress bar is full at the end
         }
-
         private void ParseXmlFile(string filePath)
         {
             xmlData = new Dictionary<string, (string Type, string RangeHigh, string RangeLow, string priority)>();
@@ -158,6 +215,7 @@ namespace DragonScope
 
         private void WriteToTextBox(string text, int priority)
         {
+            // Apply the color based on priority
             switch (priority)
             {
                 case 1:
@@ -175,7 +233,7 @@ namespace DragonScope
             }
 
             textBoxOutput.AppendText(text + $"{Environment.NewLine}");
-            textBoxOutput.SelectionColor = System.Drawing.Color.Black; // Reset color to default
+            //textBoxOutput.SelectionColor = System.Drawing.Color.Black; // Reset color to default
         }
         private void ConvertWpilogToCsv(string wpilogPath, string csvPath)
         {
