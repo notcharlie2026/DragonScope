@@ -59,6 +59,7 @@ namespace DragonScope
             bool namefoundxml = false;
             string xmlnamestring = "";
             string[] xmlnames = xmlData.Keys.ToArray();
+            int linesparsed = 0;
 
             for (int it = 0; it < lines.Length; it++)
             {
@@ -79,27 +80,29 @@ namespace DragonScope
                     if (namefoundxml)
                     {
                         var (type, rangeHigh, rangeLow, priority) = xmlData[xmlnamestring];
-
-                        if (type == "bool" && values[2] == "1")
+                        if (type == "bool")
                         {
-                            if (!activeConditions.ContainsKey(values[1]))
+                            if (values[2] == "1")
                             {
-                                if (float.TryParse(values[0], out float timeValue))
+                                if (!activeConditions.ContainsKey(values[1]))
                                 {
-                                    activeConditions[values[1]] = timeValue - robotenable; // Start time
+                                    if (float.TryParse(values[0], out float timeValue))
+                                    {
+                                        activeConditions[values[1]] = timeValue - robotenable; // Start time
+                                    }
                                 }
                             }
-                        }
-                        else if (type == "bool" && values[2] == "0")
-                        {
-                            if (activeConditions.ContainsKey(values[1]))
+                            else
                             {
-                                if (float.TryParse(values[0], out float timeValue))
+                                if (activeConditions.ContainsKey(values[1]))
                                 {
-                                    float startTime = activeConditions[values[1]];
-                                    float endTime = timeValue - robotenable;
-                                    WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
-                                    activeConditions.Remove(values[1]);
+                                    if (float.TryParse(values[0], out float timeValue))
+                                    {
+                                        float startTime = activeConditions[values[1]];
+                                        float endTime = timeValue - robotenable;
+                                        WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}", 1);
+                                        activeConditions.Remove(values[1]);
+                                    }
                                 }
                             }
                         }
@@ -198,6 +201,7 @@ namespace DragonScope
                     }
 
                     progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
+                    linesparsed = it;
                 }
             }
 
@@ -208,6 +212,7 @@ namespace DragonScope
             }
 
             progressBar1.Value = 100; // Ensure progress bar is full at the end
+            WriteToTextBox( linesparsed+1.ToString()+" entries parsed", 0);
         }
         private void ParseXmlFile(string filePath)
         {
@@ -217,9 +222,9 @@ namespace DragonScope
             {
                 var name = element.Attribute("Name")?.Value;
                 var type = element.Attribute("Type")?.Value;
-                var rangeHigh = element.Attribute("Rangehigh")?.Value;
-                var rangeLow = element.Attribute("Rangelow")?.Value;
-                var priority = element.Attribute("Priority")?.Value;
+                var rangeHigh = element.Attribute("Rangehigh")?.Value ?? string.Empty; // Ensure non-null value
+                var rangeLow = element.Attribute("Rangelow")?.Value ?? string.Empty;   // Ensure non-null value
+                var priority = element.Attribute("Priority")?.Value ?? string.Empty;  // Ensure non-null value
 
                 if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type))
                 {
@@ -250,6 +255,8 @@ namespace DragonScope
             textBoxOutput.AppendText(text + $"{Environment.NewLine}");
             //textBoxOutput.SelectionColor = System.Drawing.Color.Black; // Reset color to default
         }
+        //TODO add a method to loop through each line and find the start of robotenable so there is less on the fly calculation and we can
+        //get errors taht happend before robotenable
         private void ConvertWpilogToCsv(string wpilogPath, string csvPath)
         {
             var lines = File.ReadAllLines(wpilogPath);
