@@ -40,20 +40,24 @@ namespace DragonScope
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                if (Properties.Settings.Default.LastXmlPath != "")
+                if (Directory.Exists(Properties.Settings.Default.LastXmlPath))
                 {
                     openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
                     openFileDialog.InitialDirectory = Path.GetDirectoryName(Properties.Settings.Default.LastXmlPath);
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        ParseXmlFile(openFileDialog.FileName);
-                        lblXmlFile.Text = openFileDialog.FileName;
-                        xmlinit = true;
+                }
+                else
+                {
+                    openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+                }
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    ParseXmlFile(openFileDialog.FileName);
+                    lblXmlFile.Text = openFileDialog.FileName;
+                    xmlinit = true;
 
-                        // Save the path to application settings
-                        Properties.Settings.Default.LastXmlPath = openFileDialog.FileName;
-                        Properties.Settings.Default.Save();
-                    }
+                    // Save the path to application settings
+                    Properties.Settings.Default.LastXmlPath = openFileDialog.FileName;
+                    Properties.Settings.Default.Save();
                 }
             }
         }
