@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using static System.Windows.Forms.LinkLabel;
 
 namespace DragonScope
 {
@@ -53,8 +54,7 @@ namespace DragonScope
         {
             var activeConditions = new Dictionary<string, float>(); // Tracks active faults or out-of-bounds conditions
             var lines = File.ReadAllLines(filePath);
-            float robotenable = 0;
-            bool robotenablelatch = false;
+            float robotenable = GetRobotEnableTime(lines);
             bool namefoundxml = false;
             string xmlnamestring = "";
             string[] xmlnames = xmlData.Keys.ToArray();
@@ -185,20 +185,6 @@ namespace DragonScope
                             }
                         }
                     }
-                    else if (values[1].Contains("RobotEnable"))
-                    {
-                        if (values[2] == "true")
-                        {
-                            if (float.TryParse(values[0], out float parsedValue))
-                            {
-                                if (!robotenablelatch)
-                                {
-                                    robotenable = parsedValue;
-                                    robotenablelatch = true;
-                                }
-                            }
-                        }
-                    }
 
                     progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
                     linesparsed = it;
@@ -233,7 +219,25 @@ namespace DragonScope
                 }
             }
         }
-
+        private float GetRobotEnableTime(string[] lines)
+        {
+            for (int it = 0; it < lines.Length; it++)
+            {
+                string line = lines[it];
+                var values = line.Split(',');
+                if (values.Length > 2 && values[1].Contains("RobotEnable"))
+                {
+                    if (values[2] == "true")
+                    {
+                        if (float.TryParse(values[0], out float parsedValue))
+                        {
+                            return parsedValue;
+                        }
+                    }
+                }
+            }
+            return 0; // Placeholder return value
+        }
         private void WriteToTextBox(string text, int priority)
         {
             // Apply the color based on priority
@@ -252,9 +256,10 @@ namespace DragonScope
                     textBoxOutput.SelectionColor = System.Drawing.Color.Black;
                     break;
             }
-
-            textBoxOutput.AppendText(text + $"{Environment.NewLine}");
-            //textBoxOutput.SelectionColor = System.Drawing.Color.Black; // Reset color to default
+            if (!textBoxOutput.Text.Contains(text))
+            {
+                textBoxOutput.AppendText(text + $"{Environment.NewLine}");
+            }
         }
         //TODO add a method to loop through each line and find the start of robotenable so there is less on the fly calculation and we can
         //get errors taht happend before robotenable
