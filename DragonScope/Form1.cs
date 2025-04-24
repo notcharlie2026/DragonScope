@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using static System.Windows.Forms.LinkLabel;
@@ -14,7 +15,9 @@ namespace DragonScope
         {
             InitializeComponent();
         }
-        private Dictionary<string, (string Type, string RangeHigh, string RangeLow, string priority)> xmlData;
+        private Dictionary<string, (string RangeHigh, string RangeLow, string priority)> xmlDataRange;
+        private Dictionary<string, (string FlagState, string priority)> xmlDataBool;
+
         private bool xmlinit = false;
 
         private void btnOpenCsv_Click(object sender, EventArgs e)
@@ -69,7 +72,14 @@ namespace DragonScope
             float robotenable = GetRobotEnableTime(lines);
             bool namefoundxml = false;
             string xmlnamestring = "";
-            string[] xmlnames = xmlData.Keys.ToArray();
+            string[] xmlRangeNames = xmlDataRange.Keys.ToArray();
+            string[] xmlBoolNames = xmlDataBool.Keys.ToArray();
+
+            List<string[]> xmlList = new List<string[]>();
+
+            xmlList.Add(xmlRangeNames);
+            xmlList.Add(xmlBoolNames);
+
             int linesparsed = 0;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -80,8 +90,10 @@ namespace DragonScope
 
                 if (values.Length > 2)
                 {
-                    foreach(var name in xmlnames)
+                    foreach (var xml in xmlList)
                     {
+                        foreach (var name in xml)
+                        { 
                         if (values[1].Contains(name))
                         {
                             namefoundxml = true;
@@ -89,10 +101,11 @@ namespace DragonScope
                             break;
                         }
                     }
+                    }
                     if (namefoundxml)
                     {
-                        var (type, rangeHigh, rangeLow, priority) = xmlData[xmlnamestring];
-                        if (type == "bool")
+                        var (rangeHigh, rangeLow, priority) = xmlDataRange[xmlnamestring];
+                        if (xmlnamestring == "bool")
                         {
                             if (values[2] == "1")
                             {
@@ -215,19 +228,30 @@ namespace DragonScope
         }
         private void ParseXmlFile(string filePath)
         {
-            xmlData = new Dictionary<string, (string Type, string RangeHigh, string RangeLow, string priority)>();
+            xmlDataRange = new Dictionary<string, (string RangeHigh, string RangeLow, string priority)>();
+            xmlDataBool = new Dictionary<string, (string FlagState, string priority)>();
             var xmlDoc = XDocument.Load(filePath);
-            foreach (var element in xmlDoc.Descendants("Value"))
+            foreach (var element in xmlDoc.Descendants("BoolValue"))
             {
                 var name = element.Attribute("Name")?.Value;
-                var type = element.Attribute("Type")?.Value;
                 var rangeHigh = element.Attribute("Rangehigh")?.Value ?? string.Empty; // Ensure non-null value
                 var rangeLow = element.Attribute("Rangelow")?.Value ?? string.Empty;   // Ensure non-null value
                 var priority = element.Attribute("Priority")?.Value ?? string.Empty;  // Ensure non-null value
 
-                if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type))
+                if (!string.IsNullOrEmpty(name))
                 {
-                    xmlData[name] = (type, rangeHigh, rangeLow, priority);
+                    xmlDataRange[name] = ( rangeHigh, rangeLow, priority);
+                }
+            }
+            foreach (var element in xmlDoc.Descendants("RangeValue"))
+            {
+                var name = element.Attribute("Name")?.Value;
+                var flagState = element.Attribute("FlagState")?.Value ?? string.Empty; // Ensure non-null value
+                var priority = element.Attribute("Priority")?.Value ?? string.Empty;  // Ensure non-null value
+
+                if (!string.IsNullOrEmpty(name))
+                {
+                    xmlDataBool[name] = (flagState, priority);
                 }
             }
         }
