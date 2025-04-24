@@ -71,14 +71,15 @@ namespace DragonScope
             var lines = File.ReadAllLines(filePath);
             float robotenable = GetRobotEnableTime(lines);
             bool namefoundxml = false;
-            string xmlnamestring = "";
+            int currentxmlIndex = 0;
+            string currentxmlType = "";
             string[] xmlRangeNames = xmlDataRange.Keys.ToArray();
             string[] xmlBoolNames = xmlDataBool.Keys.ToArray();
 
             List<string[]> xmlList = new List<string[]>();
 
-            xmlList.Add(xmlRangeNames);
             xmlList.Add(xmlBoolNames);
+            xmlList.Add(xmlRangeNames);
 
             int linesparsed = 0;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -92,20 +93,22 @@ namespace DragonScope
                 {
                     foreach (var xml in xmlList)
                     {
+                        int i = 0;
                         foreach (var name in xml)
                         { 
                         if (values[1].Contains(name))
                         {
                             namefoundxml = true;
-                            xmlnamestring = name;
+                            currentxmlIndex = i;
+                            currentxmlType = name;
                             break;
                         }
-                    }
+                            i++;
+                        }
                     }
                     if (namefoundxml)
                     {
-                        var (rangeHigh, rangeLow, priority) = xmlDataRange[xmlnamestring];
-                        if (xmlnamestring == "bool")
+                        if (currentxmlIndex == 1)
                         {
                             if (values[2] == "1")
                             {
@@ -131,8 +134,9 @@ namespace DragonScope
                                 }
                             }
                         }
-                        else if (type == "range" && float.TryParse(values[2], out float intValue))
+                        else if (currentxmlIndex == 0 && float.TryParse(values[2], out float intValue))
                         {
+                            var (rangeHigh, rangeLow, priority) = xmlDataRange[currentxmlType];
                             if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
                             {
                                 if (intValue <= low || intValue >= high)
@@ -162,54 +166,55 @@ namespace DragonScope
                         }
                         //reset the xml name found flag
                         namefoundxml = false;
-                        xmlnamestring = "";
+                        currentxmlIndex = 0;
+                        currentxmlType = "";
                     }
-                    else if (values[1].Contains("/StickyFault_") && values[2] == "1")
-                    {
-                        if (!activeConditions.ContainsKey(values[1]))
-                        {
-                            if (float.TryParse(values[0], out float timeValue))
-                            {
-                                activeConditions[values[1]] = timeValue - robotenable; // Start time
-                            }
-                        }
-                    }
-                    else if (values[1].Contains("/StickyFault_") && values[2] == "0")
-                    {
-                        if (activeConditions.ContainsKey(values[1]))
-                        {
-                            if (float.TryParse(values[0], out float timeValue))
-                            {
-                                float startTime = activeConditions[values[1]];
-                                float endTime = timeValue - robotenable;
-                                WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
-                                activeConditions.Remove(values[1]);
-                            }
-                        }
-                    }
-                    else if (values[1].Contains("/Fault_") && values[2] == "1")
-                    {
-                        if (!activeConditions.ContainsKey(values[1]))
-                        {
-                            if (float.TryParse(values[0], out float timeValue))
-                            {
-                                activeConditions[values[1]] = timeValue - robotenable; // Start time
-                            }
-                        }
-                    }
-                    else if (values[1].Contains("/Fault_") && values[2] == "0")
-                    {
-                        if (activeConditions.ContainsKey(values[1]))
-                        {
-                            if (float.TryParse(values[0], out float timeValue))
-                            {
-                                float startTime = activeConditions[values[1]];
-                                float endTime = timeValue - robotenable;
-                                WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0,6), 1);
-                                activeConditions.Remove(values[1]);
-                            }
-                        }
-                    }
+                    //else if (values[1].Contains("/StickyFault_") && values[2] == "1")
+                    //{
+                    //    if (!activeConditions.ContainsKey(values[1]))
+                    //    {
+                    //        if (float.TryParse(values[0], out float timeValue))
+                    //        {
+                    //            activeConditions[values[1]] = timeValue - robotenable; // Start time
+                    //        }
+                    //    }
+                    //}
+                    //else if (values[1].Contains("/StickyFault_") && values[2] == "0")
+                    //{
+                    //    if (activeConditions.ContainsKey(values[1]))
+                    //    {
+                    //        if (float.TryParse(values[0], out float timeValue))
+                    //        {
+                    //            float startTime = activeConditions[values[1]];
+                    //            float endTime = timeValue - robotenable;
+                    //            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
+                    //            activeConditions.Remove(values[1]);
+                    //        }
+                    //    }
+                    //}
+                    //else if (values[1].Contains("/Fault_") && values[2] == "1")
+                    //{
+                    //    if (!activeConditions.ContainsKey(values[1]))
+                    //    {
+                    //        if (float.TryParse(values[0], out float timeValue))
+                    //        {
+                    //            activeConditions[values[1]] = timeValue - robotenable; // Start time
+                    //        }
+                    //    }
+                    //}
+                    //else if (values[1].Contains("/Fault_") && values[2] == "0")
+                    //{
+                    //    if (activeConditions.ContainsKey(values[1]))
+                    //    {
+                    //        if (float.TryParse(values[0], out float timeValue))
+                    //        {
+                    //            float startTime = activeConditions[values[1]];
+                    //            float endTime = timeValue - robotenable;
+                    //            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0,6), 1);
+                    //            activeConditions.Remove(values[1]);
+                    //        }
+                    //    }
+                    //}
 
                     progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
                     linesparsed = it;
@@ -231,7 +236,7 @@ namespace DragonScope
             xmlDataRange = new Dictionary<string, (string RangeHigh, string RangeLow, string priority)>();
             xmlDataBool = new Dictionary<string, (string FlagState, string priority)>();
             var xmlDoc = XDocument.Load(filePath);
-            foreach (var element in xmlDoc.Descendants("BoolValue"))
+            foreach (var element in xmlDoc.Descendants("RangeValue"))
             {
                 var name = element.Attribute("Name")?.Value;
                 var rangeHigh = element.Attribute("Rangehigh")?.Value ?? string.Empty; // Ensure non-null value
@@ -243,7 +248,7 @@ namespace DragonScope
                     xmlDataRange[name] = ( rangeHigh, rangeLow, priority);
                 }
             }
-            foreach (var element in xmlDoc.Descendants("RangeValue"))
+            foreach (var element in xmlDoc.Descendants("BoolValue"))
             {
                 var name = element.Attribute("Name")?.Value;
                 var flagState = element.Attribute("FlagState")?.Value ?? string.Empty; // Ensure non-null value
