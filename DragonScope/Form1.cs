@@ -40,12 +40,20 @@ namespace DragonScope
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                if (Properties.Settings.Default.LastXmlPath != "")
                 {
-                    ParseXmlFile(openFileDialog.FileName);
-                    lblXmlFile.Text = openFileDialog.FileName;
-                    xmlinit = true;
+                    openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+                    openFileDialog.InitialDirectory = Path.GetDirectoryName(Properties.Settings.Default.LastXmlPath);
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        ParseXmlFile(openFileDialog.FileName);
+                        lblXmlFile.Text = openFileDialog.FileName;
+                        xmlinit = true;
+
+                        // Save the path to application settings
+                        Properties.Settings.Default.LastXmlPath = openFileDialog.FileName;
+                        Properties.Settings.Default.Save();
+                    }
                 }
             }
         }
@@ -199,7 +207,7 @@ namespace DragonScope
 
             progressBar1.Value = 100; // Ensure progress bar is full at the end
             stopwatch.Stop();
-            WriteToTextBox( linesparsed+1.ToString()+" entries parsed in" + stopwatch.Elapsed.TotalSeconds.ToString() + " seconds", 0);
+            WriteToTextBox( linesparsed+1.ToString()+" entries parsed in " + stopwatch.Elapsed.TotalSeconds.ToString() + " seconds", 0);
         }
         private void ParseXmlFile(string filePath)
         {
