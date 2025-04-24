@@ -84,7 +84,7 @@
             Controls.Add(btnOpenCsv);
             Margin = new Padding(3, 4, 3, 4);
             Name = "Form1";
-            Text = "Form1";
+            Text = "Dragon Scope";
             ResumeLayout(false);
             PerformLayout();
         }
