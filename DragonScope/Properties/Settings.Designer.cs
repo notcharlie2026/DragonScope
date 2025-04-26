@@ -22,17 +22,5 @@ namespace DragonScope.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastXmlPath {
-            get {
-                return ((string)(this["LastXmlPath"]));
-            }
-            set {
-                this["LastXmlPath"] = value;
-            }
-        }
     }
 }

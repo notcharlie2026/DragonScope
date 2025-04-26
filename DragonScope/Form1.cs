@@ -18,11 +18,18 @@ namespace DragonScope
         private Dictionary<string, (string RangeHigh, string RangeLow, string priority)> xmlDataRange;
         private Dictionary<string, (string FlagState, string priority)> xmlDataBool;
 
-        private bool xmlinit = false;
+        private bool m_xmlInit = false;
+
+        private enum m_xmlDataType
+        {
+            TYPE_BOOLEAN = 0,
+            TYPE_RANGE = 1,
+            TYPE_INVALID = -1
+        }
 
         private void btnOpenCsv_Click(object sender, EventArgs e)
         {
-            if(!xmlinit)
+            if(!m_xmlInit)
             {
                 MessageBox.Show("Please load the XML file first.");
                 return;
@@ -31,6 +38,7 @@ namespace DragonScope
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                openFileDialog.RestoreDirectory = true;
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     ParseCsvFile(openFileDialog.FileName);
@@ -43,24 +51,13 @@ namespace DragonScope
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                if (Directory.Exists(Properties.Settings.Default.LastXmlPath))
-                {
-                    openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
-                    openFileDialog.InitialDirectory = Path.GetDirectoryName(Properties.Settings.Default.LastXmlPath);
-                }
-                else
-                {
-                    openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
-                }
+                openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
+                openFileDialog.RestoreDirectory = true;
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     ParseXmlFile(openFileDialog.FileName);
                     lblXmlFile.Text = openFileDialog.FileName;
-                    xmlinit = true;
-
-                    // Save the path to application settings
-                    Properties.Settings.Default.LastXmlPath = openFileDialog.FileName;
-                    Properties.Settings.Default.Save();
+                    m_xmlInit = true;
                 }
             }
         }
@@ -71,15 +68,9 @@ namespace DragonScope
             var lines = File.ReadAllLines(filePath);
             float robotenable = GetRobotEnableTime(lines);
             bool namefoundxml = false;
-            int currentxmlIndex = 0;
             string currentxmlType = "";
             string[] xmlRangeNames = xmlDataRange.Keys.ToArray();
             string[] xmlBoolNames = xmlDataBool.Keys.ToArray();
-
-            List<string[]> xmlList = new List<string[]>();
-
-            xmlList.Insert(0, xmlBoolNames);
-            xmlList.Insert(1, xmlRangeNames);
 
             int linesparsed = 0;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -91,57 +82,14 @@ namespace DragonScope
 
                 if (values.Length > 2)
                 {
-                                            int i = 0;
-                    foreach (var xml in xmlList)
-                    {
-
-                        foreach (var name in xml)
-                        { 
-                        if (values[1].Contains(name))
-                        {
-                            namefoundxml = true;
-                            currentxmlIndex = i;
-                            currentxmlType = name;
-                            break;
-                        }
-                            i++;
-                        }
-                    }
+                    var currentxmlIndex = GetTypeFromXml(values[1]); // Get the type from XML data
                     if (namefoundxml)
                     {
-                        if (currentxmlIndex == 0)
+                        switch (currentxmlIndex)
                         {
-                            var (flagState, priority) = xmlDataBool[currentxmlType];
-                            if (values[2] == flagState)
-                            {
-                                if (!activeConditions.ContainsKey(values[1]))
-                                {
-                                    if (float.TryParse(values[0], out float timeValue))
-                                    {
-                                        activeConditions[values[1]] = timeValue - robotenable; // Start time
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (activeConditions.ContainsKey(values[1]))
-                                {
-                                    if (float.TryParse(values[0], out float timeValue))
-                                    {
-                                        float startTime = activeConditions[values[1]];
-                                        float endTime = timeValue - robotenable;
-                                        WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
-                                        activeConditions.Remove(values[1]);
-                                    }
-                                }
-                            }
-                        }
-                        else if (currentxmlIndex == 1 && float.TryParse(values[2], out float intValue))
-                        {
-                            var (rangeHigh, rangeLow, priority) = xmlDataRange[currentxmlType];
-                            if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
-                            {
-                                if (intValue <= low || intValue >= high)
+                            case m_xmlDataType.TYPE_BOOLEAN:
+                                var (flagState, boolPriority) = xmlDataBool[currentxmlType]; // Renamed 'priority' to 'boolPriority'
+                                if (values[2] == flagState)
                                 {
                                     if (!activeConditions.ContainsKey(values[1]))
                                     {
@@ -159,64 +107,53 @@ namespace DragonScope
                                         {
                                             float startTime = activeConditions[values[1]];
                                             float endTime = timeValue - robotenable;
-                                            WriteToTextBox($"\"{values[1]}\" was out of bounds from {startTime} to {endTime}".Remove(0, 6), 1);
+                                            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
                                             activeConditions.Remove(values[1]);
                                         }
                                     }
                                 }
-                            }
+                                break;
+                            case m_xmlDataType.TYPE_RANGE:
+                                if (float.TryParse(values[2], out float intValue))
+                                {
+                                    var (rangeHigh, rangeLow, rangePriority) = xmlDataRange[currentxmlType]; // Renamed 'priority' to 'rangePriority'
+                                    if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
+                                    {
+                                        if (intValue <= low || intValue >= high)
+                                        {
+                                            if (!activeConditions.ContainsKey(values[1]))
+                                            {
+                                                if (float.TryParse(values[0], out float timeValue))
+                                                {
+                                                    activeConditions[values[1]] = timeValue - robotenable; // Start time
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (activeConditions.ContainsKey(values[1]))
+                                            {
+                                                if (float.TryParse(values[0], out float timeValue))
+                                                {
+                                                    float startTime = activeConditions[values[1]];
+                                                    float endTime = timeValue - robotenable;
+                                                    WriteToTextBox($"\"{values[1]}\" was out of bounds from {startTime} to {endTime}".Remove(0, 6), 1);
+                                                    activeConditions.Remove(values[1]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                            default:
+                                currentxmlType = string.Empty;
+                                break;
                         }
-                        //reset the xml name found flag
+                        // Reset the xml name found flag
                         namefoundxml = false;
                         currentxmlIndex = 0;
                         currentxmlType = "";
                     }
-                    //else if (values[1].Contains("/StickyFault_") && values[2] == "1")
-                    //{
-                    //    if (!activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            activeConditions[values[1]] = timeValue - robotenable; // Start time
-                    //        }
-                    //    }
-                    //}
-                    //else if (values[1].Contains("/StickyFault_") && values[2] == "0")
-                    //{
-                    //    if (activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            float startTime = activeConditions[values[1]];
-                    //            float endTime = timeValue - robotenable;
-                    //            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
-                    //            activeConditions.Remove(values[1]);
-                    //        }
-                    //    }
-                    //}
-                    //else if (values[1].Contains("/Fault_") && values[2] == "1")
-                    //{
-                    //    if (!activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            activeConditions[values[1]] = timeValue - robotenable; // Start time
-                    //        }
-                    //    }
-                    //}
-                    //else if (values[1].Contains("/Fault_") && values[2] == "0")
-                    //{
-                    //    if (activeConditions.ContainsKey(values[1]))
-                    //    {
-                    //        if (float.TryParse(values[0], out float timeValue))
-                    //        {
-                    //            float startTime = activeConditions[values[1]];
-                    //            float endTime = timeValue - robotenable;
-                    //            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0,6), 1);
-                    //            activeConditions.Remove(values[1]);
-                    //        }
-                    //    }
-                    //}
 
                     progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
                     linesparsed = it;
@@ -231,7 +168,25 @@ namespace DragonScope
 
             progressBar1.Value = 100; // Ensure progress bar is full at the end
             stopwatch.Stop();
-            WriteToTextBox( linesparsed+1.ToString()+" entries parsed in " + stopwatch.Elapsed.TotalSeconds.ToString() + " seconds", 0);
+            WriteToTextBox(linesparsed + 1.ToString() + " entries parsed in " + stopwatch.Elapsed.TotalSeconds.ToString() + " seconds", 0);
+        }
+        private m_xmlDataType GetTypeFromXml(string name)
+        {
+            if (xmlDataRange.ContainsKey(name))
+            {
+                var (rangeHigh, rangeLow, priority) = xmlDataRange[name];
+                return m_xmlDataType.TYPE_RANGE;
+            }
+            else if (xmlDataBool.ContainsKey(name))
+            {
+                var (flagState, priority) = xmlDataBool[name];
+                return m_xmlDataType.TYPE_BOOLEAN;
+            }
+            else
+            {
+                // If the name is not found in either dictionary, return an invalid type
+                return m_xmlDataType.TYPE_INVALID;
+            }
         }
         private void ParseXmlFile(string filePath)
         {
