@@ -78,8 +78,8 @@ namespace DragonScope
 
             List<string[]> xmlList = new List<string[]>();
 
-            xmlList.Add(xmlBoolNames);
-            xmlList.Add(xmlRangeNames);
+            xmlList.Insert(0, xmlBoolNames);
+            xmlList.Insert(1, xmlRangeNames);
 
             int linesparsed = 0;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -91,9 +91,10 @@ namespace DragonScope
 
                 if (values.Length > 2)
                 {
+                                            int i = 0;
                     foreach (var xml in xmlList)
                     {
-                        int i = 0;
+
                         foreach (var name in xml)
                         { 
                         if (values[1].Contains(name))
@@ -108,9 +109,10 @@ namespace DragonScope
                     }
                     if (namefoundxml)
                     {
-                        if (currentxmlIndex == 1)
+                        if (currentxmlIndex == 0)
                         {
-                            if (values[2] == "1")
+                            var (flagState, priority) = xmlDataBool[currentxmlType];
+                            if (values[2] == flagState)
                             {
                                 if (!activeConditions.ContainsKey(values[1]))
                                 {
@@ -134,7 +136,7 @@ namespace DragonScope
                                 }
                             }
                         }
-                        else if (currentxmlIndex == 0 && float.TryParse(values[2], out float intValue))
+                        else if (currentxmlIndex == 1 && float.TryParse(values[2], out float intValue))
                         {
                             var (rangeHigh, rangeLow, priority) = xmlDataRange[currentxmlType];
                             if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))

@@ -1,6 +1,5 @@
 <Config>
     <RangeValue Name="/RoboRio/BatteryVoltage" Rangehigh="12.8" Rangelow="10" Priority="1"/>
-    <BoolValue Name="RobotEnable" FlagState="true" Priority="1"/>
-
+    <RangeValue Name="/Fault" Rangehigh="0" Rangelow="0" Priority="1"/>
 </Config>
     

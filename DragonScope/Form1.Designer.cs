@@ -15,6 +15,9 @@
             lblXmlFile = new Label();
             progressBar1 = new ProgressBar();
             textBoxOutput = new RichTextBox();
+            panel1 = new Panel();
+            textBox1 = new TextBox();
+            panel1.SuspendLayout();
             SuspendLayout();
             // 
             // btnOpenCsv
@@ -30,7 +33,7 @@
             // 
             // btnOpenXml
             // 
-            btnOpenXml.Location = new Point(12, 11);
+            btnOpenXml.Location = new Point(3, 39);
             btnOpenXml.Margin = new Padding(3, 4, 3, 4);
             btnOpenXml.Name = "btnOpenXml";
             btnOpenXml.Size = new Size(86, 31);
@@ -50,7 +53,7 @@
             // lblXmlFile
             // 
             lblXmlFile.AutoSize = true;
-            lblXmlFile.Location = new Point(106, 23);
+            lblXmlFile.Location = new Point(106, 31);
             lblXmlFile.Name = "lblXmlFile";
             lblXmlFile.Size = new Size(0, 20);
             lblXmlFile.TabIndex = 3;
@@ -71,24 +74,46 @@
             textBoxOutput.TabIndex = 6;
             textBoxOutput.Text = "";
             // 
+            // panel1
+            // 
+            panel1.Controls.Add(btnOpenXml);
+            panel1.Controls.Add(textBox1);
+            panel1.Location = new Point(908, 11);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(250, 577);
+            panel1.TabIndex = 7;
+            // 
+            // textBox1
+            // 
+            textBox1.Location = new Point(3, 5);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(244, 27);
+            textBox1.TabIndex = 8;
+            textBox1.Text = "Config";
+            textBox1.TextAlign = HorizontalAlignment.Center;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(914, 600);
+            ClientSize = new Size(1254, 600);
+            Controls.Add(panel1);
             Controls.Add(textBoxOutput);
             Controls.Add(progressBar1);
             Controls.Add(lblXmlFile);
             Controls.Add(lblCsvFile);
-            Controls.Add(btnOpenXml);
             Controls.Add(btnOpenCsv);
             Margin = new Padding(3, 4, 3, 4);
             Name = "Form1";
             Text = "Dragon Scope";
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
         private ProgressBar progressBar1;
         private RichTextBox textBoxOutput;
+        private Panel panel1;
+        private TextBox textBox1;
     }
 }
