@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Windows.Forms;
 using System.Xml.Linq;
-using static System.Windows.Forms.LinkLabel;
 
 namespace DragonScope
 {
@@ -18,18 +11,22 @@ namespace DragonScope
         private Dictionary<string, (string RangeHigh, string RangeLow, string priority)> xmlDataRange;
         private Dictionary<string, (string FlagState, string priority)> xmlDataBool;
 
+        private List<string> m_excludedStrings = new List<string>();
         private bool m_xmlInit = false;
+
+        string m_currentxmlType = "";
 
         private enum m_xmlDataType
         {
             TYPE_BOOLEAN = 0,
             TYPE_RANGE = 1,
+            TYPE_EXCLUDED = 2,
             TYPE_INVALID = -1
         }
 
         private void btnOpenCsv_Click(object sender, EventArgs e)
         {
-            if(!m_xmlInit)
+            if (!m_xmlInit)
             {
                 MessageBox.Show("Please load the XML file first.");
                 return;
@@ -52,7 +49,7 @@ namespace DragonScope
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = "XML files (*.xml)|*.xml|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
+                openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     ParseXmlFile(openFileDialog.FileName);
@@ -67,8 +64,6 @@ namespace DragonScope
             var activeConditions = new Dictionary<string, float>(); // Tracks active faults or out-of-bounds conditions
             var lines = File.ReadAllLines(filePath);
             float robotenable = GetRobotEnableTime(lines);
-            bool namefoundxml = false;
-            string currentxmlType = "";
             string[] xmlRangeNames = xmlDataRange.Keys.ToArray();
             string[] xmlBoolNames = xmlDataBool.Keys.ToArray();
 
@@ -83,77 +78,76 @@ namespace DragonScope
                 if (values.Length > 2)
                 {
                     var currentxmlIndex = GetTypeFromXml(values[1]); // Get the type from XML data
-                    if (namefoundxml)
+                    switch (currentxmlIndex)
                     {
-                        switch (currentxmlIndex)
-                        {
-                            case m_xmlDataType.TYPE_BOOLEAN:
-                                var (flagState, boolPriority) = xmlDataBool[currentxmlType]; // Renamed 'priority' to 'boolPriority'
-                                if (values[2] == flagState)
+                        case m_xmlDataType.TYPE_BOOLEAN:
+                            var (flagState, boolPriority) = xmlDataBool[m_currentxmlType]; // Renamed 'priority' to 'boolPriority'
+                            if (values[2] == flagState)
+                            {
+                                if (!activeConditions.ContainsKey(values[1]))
                                 {
-                                    if (!activeConditions.ContainsKey(values[1]))
+                                    if (float.TryParse(values[0], out float timeValue))
                                     {
-                                        if (float.TryParse(values[0], out float timeValue))
-                                        {
-                                            activeConditions[values[1]] = timeValue - robotenable; // Start time
-                                        }
+                                        activeConditions[values[1]] = timeValue - robotenable; // Start time
                                     }
                                 }
-                                else
+                            }
+                            else
+                            {
+                                if (activeConditions.ContainsKey(values[1]))
                                 {
-                                    if (activeConditions.ContainsKey(values[1]))
+                                    if (float.TryParse(values[0], out float timeValue) && int.TryParse(boolPriority, out int boolPriorityInt))
                                     {
-                                        if (float.TryParse(values[0], out float timeValue))
-                                        {
-                                            float startTime = activeConditions[values[1]];
-                                            float endTime = timeValue - robotenable;
-                                            WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
-                                            activeConditions.Remove(values[1]);
-                                        }
+                                        float startTime = activeConditions[values[1]];
+                                        float endTime = timeValue - robotenable;
+                                        WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
+                                        activeConditions.Remove(values[1]);
                                     }
                                 }
-                                break;
-                            case m_xmlDataType.TYPE_RANGE:
-                                if (float.TryParse(values[2], out float intValue))
+                            }
+                            break;
+                        case m_xmlDataType.TYPE_RANGE:
+                            if (float.TryParse(values[2], out float intValue))
+                            {
+                                var (rangeHigh, rangeLow, rangePriority) = xmlDataRange[m_currentxmlType]; // Renamed 'priority' to 'rangePriority'
+                                if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
                                 {
-                                    var (rangeHigh, rangeLow, rangePriority) = xmlDataRange[currentxmlType]; // Renamed 'priority' to 'rangePriority'
-                                    if (float.TryParse(rangeLow, out float low) && float.TryParse(rangeHigh, out float high))
+                                    if (intValue < low || intValue > high)
                                     {
-                                        if (intValue <= low || intValue >= high)
+                                        if (!activeConditions.ContainsKey(values[1]))
                                         {
-                                            if (!activeConditions.ContainsKey(values[1]))
+                                            if (float.TryParse(values[0], out float timeValue))
                                             {
-                                                if (float.TryParse(values[0], out float timeValue))
-                                                {
-                                                    activeConditions[values[1]] = timeValue - robotenable; // Start time
-                                                }
+                                                activeConditions[values[1]] = timeValue - robotenable; // Start time
                                             }
                                         }
-                                        else
+                                    }
+                                    else
+                                    {
+                                        if (activeConditions.ContainsKey(values[1]))
                                         {
-                                            if (activeConditions.ContainsKey(values[1]))
+                                            if (float.TryParse(values[0], out float timeValue) && int.TryParse(rangePriority, out int rangePriorityInt))
                                             {
-                                                if (float.TryParse(values[0], out float timeValue))
-                                                {
-                                                    float startTime = activeConditions[values[1]];
-                                                    float endTime = timeValue - robotenable;
-                                                    WriteToTextBox($"\"{values[1]}\" was out of bounds from {startTime} to {endTime}".Remove(0, 6), 1);
-                                                    activeConditions.Remove(values[1]);
-                                                }
+                                                float startTime = activeConditions[values[1]];
+                                                float endTime = timeValue - robotenable;
+                                                WriteToTextBox($"\"{values[1]}\" was out of bounds from {startTime} to {endTime}".Remove(0, 6), rangePriorityInt);
+                                                activeConditions.Remove(values[1]);
                                             }
                                         }
                                     }
                                 }
-                                break;
-                            default:
-                                currentxmlType = string.Empty;
-                                break;
-                        }
-                        // Reset the xml name found flag
-                        namefoundxml = false;
-                        currentxmlIndex = 0;
-                        currentxmlType = "";
+                            }
+                            break;
+                        case m_xmlDataType.TYPE_EXCLUDED:
+
+                            break;
+                        default:
+                            m_currentxmlType = string.Empty;
+                            break;
                     }
+                    // Reset the xml name found flag
+                    currentxmlIndex = 0;
+                    m_currentxmlType = "";
 
                     progressBar1.Value = (int)((float)it / lines.Length * 100); // Update progress bar
                     linesparsed = it;
@@ -163,7 +157,7 @@ namespace DragonScope
             // Handle any remaining active conditions at the end of the file
             foreach (var condition in activeConditions)
             {
-                WriteToTextBox($"\"{condition.Key}\" started at {condition.Value} and did not end.".Remove(0, 6), 2);
+                WriteToTextBox($"\"{condition.Key}\" started at {condition.Value} and did not end.".Remove(0, 6), 4);
             }
 
             progressBar1.Value = 100; // Ensure progress bar is full at the end
@@ -172,27 +166,45 @@ namespace DragonScope
         }
         private m_xmlDataType GetTypeFromXml(string name)
         {
-            if (xmlDataRange.ContainsKey(name))
+            foreach (var key in m_excludedStrings)
             {
-                var (rangeHigh, rangeLow, priority) = xmlDataRange[name];
-                return m_xmlDataType.TYPE_RANGE;
+                if (name.Contains(key))
+                {
+                    m_currentxmlType = key;
+                    return m_xmlDataType.TYPE_EXCLUDED;
+                }
             }
-            else if (xmlDataBool.ContainsKey(name))
+            foreach (var key in xmlDataRange.Keys)
             {
-                var (flagState, priority) = xmlDataBool[name];
-                return m_xmlDataType.TYPE_BOOLEAN;
+                if (name.Contains(key))
+                {
+                    m_currentxmlType = key;
+                    return m_xmlDataType.TYPE_RANGE;
+                }
             }
-            else
+            foreach (var key in xmlDataBool.Keys)
             {
-                // If the name is not found in either dictionary, return an invalid type
-                return m_xmlDataType.TYPE_INVALID;
+                if (name.Contains(key))
+                {
+                    m_currentxmlType = key;
+                    return m_xmlDataType.TYPE_BOOLEAN;
+                }
             }
+            return m_xmlDataType.TYPE_INVALID;
         }
         private void ParseXmlFile(string filePath)
         {
             xmlDataRange = new Dictionary<string, (string RangeHigh, string RangeLow, string priority)>();
             xmlDataBool = new Dictionary<string, (string FlagState, string priority)>();
             var xmlDoc = XDocument.Load(filePath);
+            foreach (var element in xmlDoc.Descendants("ExcludedValue"))
+            {
+                var name = element.Attribute("Name")?.Value;
+                if (!string.IsNullOrEmpty(name))
+                {
+                    m_excludedStrings.Add(name);
+                }
+            }
             foreach (var element in xmlDoc.Descendants("RangeValue"))
             {
                 var name = element.Attribute("Name")?.Value;
@@ -202,7 +214,7 @@ namespace DragonScope
 
                 if (!string.IsNullOrEmpty(name))
                 {
-                    xmlDataRange[name] = ( rangeHigh, rangeLow, priority);
+                    xmlDataRange[name] = (rangeHigh, rangeLow, priority);
                 }
             }
             foreach (var element in xmlDoc.Descendants("BoolValue"))
@@ -249,6 +261,9 @@ namespace DragonScope
                     break;
                 case 3:
                     textBoxOutput.SelectionColor = System.Drawing.Color.Yellow;
+                    break;
+                case 4:
+                    textBoxOutput.SelectionColor = System.Drawing.Color.Purple;
                     break;
                 default:
                     textBoxOutput.SelectionColor = System.Drawing.Color.Black;

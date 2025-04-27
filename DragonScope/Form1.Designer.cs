@@ -19,7 +19,7 @@
             // 
             // btnOpenCsv
             // 
-            btnOpenCsv.Location = new Point(10, 8);
+            btnOpenCsv.Location = new Point(10, 37);
             btnOpenCsv.Name = "btnOpenCsv";
             btnOpenCsv.Size = new Size(75, 23);
             btnOpenCsv.TabIndex = 1;
@@ -29,7 +29,7 @@
             // 
             // btnOpenXml
             // 
-            btnOpenXml.Location = new Point(10, 37);
+            btnOpenXml.Location = new Point(10, 8);
             btnOpenXml.Name = "btnOpenXml";
             btnOpenXml.Size = new Size(75, 23);
             btnOpenXml.TabIndex = 0;
@@ -39,7 +39,8 @@
             // 
             // lblCsvFile
             // 
-            lblCsvFile.Location = new Point(90, 46);
+            lblCsvFile.AutoSize = true;
+            lblCsvFile.Location = new Point(90, 40);
             lblCsvFile.Name = "lblCsvFile";
             lblCsvFile.Size = new Size(0, 23);
             lblCsvFile.TabIndex = 2;
@@ -47,7 +48,7 @@
             // lblXmlFile
             // 
             lblXmlFile.AutoSize = true;
-            lblXmlFile.Location = new Point(90, 40);
+            lblXmlFile.Location = new Point(90, 20);
             lblXmlFile.Name = "lblXmlFile";
             lblXmlFile.Size = new Size(0, 15);
             lblXmlFile.TabIndex = 3;
