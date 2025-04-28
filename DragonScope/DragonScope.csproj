@@ -9,19 +9,26 @@
     <NoWin32Manifest>true</NoWin32Manifest>
     <PackageIcon>48ee5adb-0dd7-4902-983c-ea564542c302.png</PackageIcon>
     <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
-    <ApplicationIcon>dragon_302.ico</ApplicationIcon>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
     <SignAssembly>False</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="dragon_302.ico" />
+    <None Remove="App.config" />
+    <None Remove="icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Downloads\48ee5adb-0dd7-4902-983c-ea564542c302.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <Content Include="icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="App.config" />
+    <EmbeddedResource Include="icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="48ee5adb-0dd7-4902-983c-ea564542c302.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +52,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="48ee5adb-0dd7-4902-983c-ea564542c302.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

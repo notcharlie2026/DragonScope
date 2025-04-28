@@ -1,12 +1,22 @@
+using System.Reflection;
 using System.Xml.Linq;
+using System.IO;
+using System.Reflection;
+
 
 namespace DragonScope
 {
     public partial class Form1 : Form
     {
+
         public Form1()
         {
             InitializeComponent();
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DragonScope.icon.ico");
+            if (stream != null)
+            {
+                this.Icon = new Icon(stream);
+            }
         }
         private Dictionary<string, (string RangeHigh, string RangeLow, string priority)> xmlDataRange;
         private Dictionary<string, (string FlagState, string priority)> xmlDataBool;
