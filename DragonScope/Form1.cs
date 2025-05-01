@@ -1,8 +1,6 @@
 using System.Reflection;
 using System.Xml.Linq;
 using System.IO;
-using System.Reflection;
-
 
 namespace DragonScope
 {
@@ -67,6 +65,23 @@ namespace DragonScope
                     m_xmlInit = true;
                 }
             }
+        }
+        private void HootLoad_Click(object sender, EventArgs e)
+        {
+            if (!Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data"))
+            {
+                Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data");
+            }
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Hoot Files (*.hoot)|*.hoot|All files (*.*)|*.*";
+                openFileDialog.RestoreDirectory = true;
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    ConvertHootLogToWpilog(openFileDialog.FileName, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data");
+                }
+            }
+            
         }
 
         private void ParseCsvFile(string filePath)
@@ -238,6 +253,16 @@ namespace DragonScope
                     xmlDataBool[name] = (flagState, priority);
                 }
             }
+            foreach (var element in xmlDoc.Descendants("CANDiviceAlias"))
+            {
+                var logName = element.Attribute("LogName")?.Value;
+                var Alias = element.Attribute("Alias");
+
+                if (!string.IsNullOrEmpty(logName))
+                {
+
+                }
+            }
         }
         private float GetRobotEnableTime(string[] lines)
         {
@@ -312,8 +337,14 @@ namespace DragonScope
         private void ConvertHootLogToWpilog(string hootLogPath, string wpilogPath)
         {
             // Assuming Owlet is a command-line tool
-            string owletExecutable = @"path\to\owlet.exe"; // Update with the actual path to Owlet
-            string arguments = $"convert \"{hootLogPath}\" \"{wpilogPath}\"";
+            string owletExecutable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents\\GitHub\\DragonScope\\owlet-25.2.0-windowsx86-64.exe");
+            hootLogPath = hootLogPath.Replace(" ", "");
+            hootLogPath = hootLogPath.Replace("\\", "/");
+            string arguments = $"-f wpilog {hootLogPath} {wpilogPath}";
+            if(!File.Exists(hootLogPath))
+            {
+                MessageBox.Show("Provide valid hoot directory, dufus");
+            }
 
             var process = new System.Diagnostics.Process
             {
@@ -324,9 +355,10 @@ namespace DragonScope
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = false
                 }
             };
+            Console.WriteLine($"Executing: {owletExecutable} {arguments}");
 
             process.Start();
             string output = process.StandardOutput.ReadToEnd();

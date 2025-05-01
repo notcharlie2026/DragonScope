@@ -15,6 +15,7 @@
             lblXmlFile = new Label();
             progressBar1 = new ProgressBar();
             textBoxOutput = new RichTextBox();
+            HootLoad = new Button();
             SuspendLayout();
             // 
             // btnOpenCsv
@@ -71,11 +72,22 @@
             textBoxOutput.TabIndex = 6;
             textBoxOutput.Text = "";
             // 
+            // HootLoad
+            // 
+            HootLoad.Location = new Point(806, 47);
+            HootLoad.Name = "HootLoad";
+            HootLoad.Size = new Size(94, 29);
+            HootLoad.TabIndex = 7;
+            HootLoad.Text = "HootLoad";
+            HootLoad.UseVisualStyleBackColor = true;
+            HootLoad.Click += HootLoad_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(912, 600);
+            Controls.Add(HootLoad);
             Controls.Add(btnOpenXml);
             Controls.Add(textBoxOutput);
             Controls.Add(progressBar1);
@@ -90,5 +102,6 @@
         }
         private ProgressBar progressBar1;
         private RichTextBox textBoxOutput;
+        private Button HootLoad;
     }
 }

@@ -5,4 +5,5 @@
     <ExcludedValue Name="/FaultField" />
     <ExcludedValue Name="/Fault_SupplyCurrLimit" />
     <ExcludedValue Name="/Fault_StatorCurrLimit" />
+    <CANDiviceAlias LogName="TalonFX-4" Alias="Alias"/>
 </Config>
