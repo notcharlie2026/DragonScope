@@ -66,23 +66,6 @@ namespace DragonScope
                 }
             }
         }
-        private void HootLoad_Click(object sender, EventArgs e)
-        {
-            if (!Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data"))
-            {
-                Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data");
-            }
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                openFileDialog.Filter = "Hoot Files (*.hoot)|*.hoot|All files (*.*)|*.*";
-                openFileDialog.RestoreDirectory = true;
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    ConvertHootLogToWpilog(openFileDialog.FileName, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data");
-                }
-            }
-            
-        }
 
         private void ParseCsvFile(string filePath)
         {
@@ -309,6 +292,32 @@ namespace DragonScope
                 textBoxOutput.AppendText(text + $"{Environment.NewLine}");
             }
         }
+        private void HootLoad_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data"))
+                {
+                    Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data");
+                }
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.Filter = "Hoot Files (*.hoot)|*.hoot|All files (*.*)|*.*";
+                    openFileDialog.RestoreDirectory = true;
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        string fileNameOnly = Path.GetFileName(openFileDialog.FileName);
+                        string targetPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data", fileNameOnly);
+                        targetPath.Replace(".hoot", ".wpilog");
+                        ConvertHootLogToWpilog(openFileDialog.FileName, targetPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         //TODO add a method to loop through each line and find the start of robotenable so there is less on the fly calculation and we can
         //get errors taht happend before robotenable
         private void ConvertWpilogToCsv(string wpilogPath, string csvPath)
@@ -336,12 +345,10 @@ namespace DragonScope
 
         private void ConvertHootLogToWpilog(string hootLogPath, string wpilogPath)
         {
-            // Assuming Owlet is a command-line tool
-            string owletExecutable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents\\GitHub\\DragonScope\\owlet-25.2.0-windowsx86-64.exe");
-            hootLogPath = hootLogPath.Replace(" ", "");
-            hootLogPath = hootLogPath.Replace("\\", "/");
-            string arguments = $"-f wpilog {hootLogPath} {wpilogPath}";
-            if(!File.Exists(hootLogPath))
+            progressBar1.Value = 0;
+            string owletExecutable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents\\GitHub\\DragonScope\\owlet-25.4.0-windowsx86-64.exe");
+            string arguments = $"-f wpilog -F {hootLogPath} {wpilogPath}";
+            if (!File.Exists(hootLogPath))
             {
                 MessageBox.Show("Provide valid hoot directory, dufus");
             }
@@ -355,7 +362,7 @@ namespace DragonScope
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = false
+                    CreateNoWindow = true
                 }
             };
             Console.WriteLine($"Executing: {owletExecutable} {arguments}");
@@ -364,6 +371,7 @@ namespace DragonScope
             string output = process.StandardOutput.ReadToEnd();
             string error = process.StandardError.ReadToEnd();
             process.WaitForExit();
+            progressBar1.Value = 100;
 
             if (process.ExitCode != 0)
             {
