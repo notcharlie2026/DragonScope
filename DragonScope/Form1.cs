@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Xml.Linq;
 using System.IO;
+using Windows.Graphics.Printing3D;
 
 namespace DragonScope
 {
@@ -18,7 +19,7 @@ namespace DragonScope
         }
         private Dictionary<string, (string RangeHigh, string RangeLow, string priority)> xmlDataRange;
         private Dictionary<string, (string FlagState, string priority)> xmlDataBool;
-
+        private Dictionary<string, string> xmlAlias;
         private List<string> m_excludedStrings = new List<string>();
         private bool m_xmlInit = false;
 
@@ -86,6 +87,7 @@ namespace DragonScope
                 if (values.Length > 2)
                 {
                     var currentxmlIndex = GetTypeFromXml(values[1]); // Get the type from XML data
+                    string displayName = GetAlias(values[1]); // Get alias or original name
                     switch (currentxmlIndex)
                     {
                         case m_xmlDataType.TYPE_BOOLEAN:
@@ -108,7 +110,7 @@ namespace DragonScope
                                     {
                                         float startTime = activeConditions[values[1]];
                                         float endTime = timeValue - robotenable;
-                                        WriteToTextBox($"\"{values[1]}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
+                                        WriteToTextBox($"\"{displayName}\" was true from {startTime} to {endTime}".Remove(0, 6), 1);
                                         activeConditions.Remove(values[1]);
                                     }
                                 }
@@ -138,7 +140,7 @@ namespace DragonScope
                                             {
                                                 float startTime = activeConditions[values[1]];
                                                 float endTime = timeValue - robotenable;
-                                                WriteToTextBox($"\"{values[1]}\" was out of bounds from {startTime} to {endTime}".Remove(0, 6), rangePriorityInt);
+                                                WriteToTextBox($"\"{displayName}\" was out of bounds from {startTime} to {endTime}".Remove(0, 6), rangePriorityInt);
                                                 activeConditions.Remove(values[1]);
                                             }
                                         }
@@ -204,6 +206,7 @@ namespace DragonScope
         {
             xmlDataRange = new Dictionary<string, (string RangeHigh, string RangeLow, string priority)>();
             xmlDataBool = new Dictionary<string, (string FlagState, string priority)>();
+            xmlAlias = new Dictionary<string, string>(); // Ensure it's initialized
             var xmlDoc = XDocument.Load(filePath);
             foreach (var element in xmlDoc.Descendants("ExcludedValue"))
             {
@@ -239,13 +242,26 @@ namespace DragonScope
             foreach (var element in xmlDoc.Descendants("CANDiviceAlias"))
             {
                 var logName = element.Attribute("LogName")?.Value;
-                var Alias = element.Attribute("Alias");
+                var alias = element.Attribute("Alias")?.Value;
 
-                if (!string.IsNullOrEmpty(logName))
+                if (!string.IsNullOrEmpty(logName) && !string.IsNullOrEmpty(alias))
                 {
-
+                    xmlAlias[logName] = alias;
                 }
             }
+        }
+        // 3. Add a helper to get alias or fallback to original name
+        private string GetAlias(string deviceName)
+        {
+            foreach (var kvp in xmlAlias)
+            {
+                if (deviceName.Contains(kvp.Key))
+                {
+                    // Replace only the matching part with the alias
+                    return deviceName.Replace(kvp.Key, kvp.Value);
+                }
+            }
+            return deviceName;
         }
         private float GetRobotEnableTime(string[] lines)
         {
