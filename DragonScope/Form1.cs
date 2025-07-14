@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Xml.Linq;
-using System.IO;
-using Windows.Graphics.Printing3D;
+using WpiLogLib;
 
 namespace DragonScope
 {
@@ -22,7 +21,7 @@ namespace DragonScope
         private Dictionary<string, string> xmlAlias;
         private List<string> m_excludedStrings = new List<string>();
         private bool m_xmlInit = false;
-
+        string m_owletExecutablePath = string.Empty;
         string m_currentxmlType = "";
 
         private enum m_xmlDataType
@@ -35,11 +34,6 @@ namespace DragonScope
 
         private void btnOpenCsv_Click(object sender, EventArgs e)
         {
-            if (!m_xmlInit)
-            {
-                MessageBox.Show("Please load the XML file first.");
-                return;
-            }
             textBoxOutput.Text = "";
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -70,6 +64,11 @@ namespace DragonScope
 
         private void ParseCsvFile(string filePath)
         {
+            if (!m_xmlInit)
+            {
+                MessageBox.Show("Please load the XML file first.");
+                return;
+            }
             var activeConditions = new Dictionary<string, float>(); // Tracks active faults or out-of-bounds conditions
             var lines = File.ReadAllLines(filePath);
             float robotenable = GetRobotEnableTime(lines);
@@ -312,10 +311,7 @@ namespace DragonScope
         {
             try
             {
-                if (!Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data"))
-                {
-                    Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data");
-                }
+                string targetPath = "";
                 using (OpenFileDialog openFileDialog = new OpenFileDialog())
                 {
                     openFileDialog.Filter = "Hoot Files (*.hoot)|*.hoot|All files (*.*)|*.*";
@@ -323,9 +319,15 @@ namespace DragonScope
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         string fileNameOnly = Path.GetFileName(openFileDialog.FileName);
-                        string targetPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\Documents\\GitHub\\DragonScope\\Data", fileNameOnly);
-                        targetPath.Replace(".hoot", ".wpilog");
-                        ConvertHootLogToWpilog(openFileDialog.FileName, targetPath);
+                        targetPath = openFileDialog.FileName;
+                    }
+                }
+                using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
+                {
+                    folderBrowserDialog.Description = "Select the target directory for the converted file";
+                    if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        ConvertHootLogToWpilog(targetPath, Path.Combine(folderBrowserDialog.SelectedPath, targetPath.Replace(".hoot", ".wpilog")));
                     }
                 }
             }
@@ -334,46 +336,59 @@ namespace DragonScope
                 MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        //TODO add a method to loop through each line and find the start of robotenable so there is less on the fly calculation and we can
-        //get errors taht happend before robotenable
         private void ConvertWpilogToCsv(string wpilogPath, string csvPath)
         {
-            var lines = File.ReadAllLines(wpilogPath);
-            using (var writer = new StreamWriter(csvPath))
+            try
             {
-                // Write CSV header
-                writer.WriteLine("Timestamp,Key,Value");
-
-                foreach (var line in lines)
-                {
-                    // Assuming wpilog is in a key-value format with timestamps
-                    var parts = line.Split(' '); // Adjust delimiter based on wpilog format
-                    if (parts.Length >= 3)
-                    {
-                        string timestamp = parts[0];
-                        string key = parts[1];
-                        string value = string.Join(" ", parts.Skip(2));
-                        writer.WriteLine($"{timestamp},{key},{value}");
-                    }
-                }
+                var parser = new WpiLogParser();
+                parser.Load(wpilogPath);
+                progressBar1.Value = 75;
+                parser.ExportToCsv(csvPath);
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred with wpilog conversion: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            ParseCsvFile(csvPath);
+
         }
 
         private void ConvertHootLogToWpilog(string hootLogPath, string wpilogPath)
         {
             progressBar1.Value = 0;
-            string owletExecutable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents\\GitHub\\DragonScope\\owlet-25.4.0-windowsx86-64.exe");
+            if(m_owletExecutablePath != string.Empty)
+            {
+                MessageBox.Show("Owlet executable already selected, skipping selection dialog.");
+            }
+            else
+            {
+                using OpenFileDialog openFileDialog = new OpenFileDialog
+                {
+                    Filter = "Owlet Executable|owlet.exe|All files (*.*)|*.*",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                };
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    m_owletExecutablePath = openFileDialog.FileName;
+                }
+                else
+                {
+                    MessageBox.Show("Please select the Owlet executable.");
+                    return;
+                }
+            }
+
             string arguments = $"-f wpilog -F {hootLogPath} {wpilogPath}";
             if (!File.Exists(hootLogPath))
             {
-                MessageBox.Show("Provide valid hoot directory, dufus");
+                MessageBox.Show("Provide valid hoot directory");
             }
 
             var process = new System.Diagnostics.Process
             {
                 StartInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = owletExecutable,
+                    FileName = m_owletExecutablePath,
                     Arguments = arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -381,18 +396,19 @@ namespace DragonScope
                     CreateNoWindow = true
                 }
             };
-            Console.WriteLine($"Executing: {owletExecutable} {arguments}");
+            Console.WriteLine($"Executing: {m_owletExecutablePath} {arguments}");
 
             process.Start();
             string output = process.StandardOutput.ReadToEnd();
             string error = process.StandardError.ReadToEnd();
             process.WaitForExit();
-            progressBar1.Value = 100;
+            progressBar1.Value = 50;
 
             if (process.ExitCode != 0)
             {
                 throw new Exception($"Owlet conversion failed: {error}");
             }
+            ConvertWpilogToCsv(wpilogPath, wpilogPath.Replace(".wpilog", ".csv"));
         }
     }
 }
